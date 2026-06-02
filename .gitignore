@@ -23,9 +23,11 @@ instance/
 *.sqlite
 *.sqlite3
 
-# Uploads and runtime files
+# Uploads, local transaction samples, and runtime files
 uploads/
+transaction_file/
 *.log
+*.pid
 flask-server*.log
 
 # macOS / editor
@@ -37,3 +39,4 @@ flask-server*.log
 build/
 dist/
 *.egg-info/
+
