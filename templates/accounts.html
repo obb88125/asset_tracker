@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}계좌 관리 - Asset Tracker{% endblock %}
+
+{% block content %}
+<div class="header-section flex-between">
+    <h1>계좌 관리</h1>
+    <button class="btn btn-primary" id="btnAddAccount">새 계좌 추가</button>
+</div>
+
+<div class="account-grid" id="accountGrid">
+    <!-- JS 동적 렌더링 -->
+</div>
+
+<!-- 계좌 폼 모달 -->
+<div id="accountModal" class="modal hidden">
+    <div class="modal-content">
+        <h2 id="modalTitle">계좌 추가</h2>
+        <div class="form-group">
+            <label>별칭 (예: KB주거래)</label>
+            <input type="text" id="accName" class="form-control">
+        </div>
+        <div class="form-group">
+            <label>기관명</label>
+            <input type="text" id="accInstitution" class="form-control">
+        </div>
+        <div class="form-group">
+            <label>계좌번호 (선택)</label>
+            <input type="text" id="accNumber" class="form-control">
+        </div>
+        <div class="modal-actions mt-4">
+            <button class="btn btn-ghost" id="btnCancel">취소</button>
+            <button class="btn btn-primary" id="btnSave">저장</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/accounts.js') }}"></script>
+{% endblock %}

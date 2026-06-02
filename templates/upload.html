@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}데이터 업로드 - Asset Tracker{% endblock %}
+
+{% block content %}
+<div class="header-section">
+    <h1>데이터 업로드</h1>
+</div>
+
+<div class="card file-drop-zone" id="dropZone">
+    <i data-lucide="upload-cloud" class="icon-large"></i>
+    <p>여기로 엑셀 파일을 드래그하거나 클릭하여 업로드하세요.</p>
+    <input type="file" id="fileInput" class="hidden" accept=".xlsx,.xls,.csv">
+</div>
+
+<div id="mappingSection" class="card mt-4 hidden">
+    <h2>데이터 매핑</h2>
+    <div class="form-group">
+        <label>계좌 선택</label>
+        <select id="accountSelect" class="form-control"></select>
+    </div>
+    <div class="form-group">
+        <label>데이터 유형</label>
+        <select id="dataTypeSelect" class="form-control">
+            <option value="transaction">거래 내역 (입출금)</option>
+            <option value="stock_trade">주식 매매</option>
+        </select>
+    </div>
+    
+    <h3>컬럼 매핑 확인</h3>
+    <div class="table-container">
+        <table class="data-table" id="previewTable">
+            <thead>
+                <tr id="mappingHeaders"></tr>
+                <tr id="originalHeaders"></tr>
+            </thead>
+            <tbody>
+                <!-- 미리보기 데이터 -->
+            </tbody>
+        </table>
+    </div>
+    
+    <button class="btn btn-primary mt-4" id="btnImport">데이터 임포트 실행</button>
+</div>
+
+<div class="card mt-4">
+    <h2>업로드 이력</h2>
+    <table class="data-table" id="historyTable">
+        <thead>
+            <tr>
+                <th>일시</th>
+                <th>파일명</th>
+                <th>임포트된 행</th>
+                <th>전체 행</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/upload.js') }}"></script>
+{% endblock %}

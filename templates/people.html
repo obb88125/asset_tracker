@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}인물 관리 - Asset Tracker{% endblock %}
+
+{% block content %}
+<div class="header-section flex-between">
+    <h1>인물 관리</h1>
+    <div class="actions">
+        <input type="text" id="searchInput" class="search-input" placeholder="이름 검색...">
+        <button id="btnMerge" class="btn btn-primary" disabled>합치기</button>
+    </div>
+</div>
+
+<div class="card table-container">
+    <table class="data-table" id="peopleTable">
+        <thead>
+            <tr>
+                <th><input type="checkbox" id="selectAll"></th>
+                <th>대표 이름</th>
+                <th>별칭들</th>
+                <th>총 입금</th>
+                <th>총 출금</th>
+                <th>순 금액</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- JS 동적 렌더링 -->
+        </tbody>
+    </table>
+</div>
+
+<!-- 합치기 모달 -->
+<div id="mergeModal" class="modal hidden">
+    <div class="modal-content">
+        <h2>인물 합치기</h2>
+        <p>선택한 인물들을 하나로 합칩니다. 대상 대표 이름을 선택하세요.</p>
+        <select id="mergeTargetSelect" class="form-control"></select>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" id="btnCancelMerge">취소</button>
+            <button class="btn btn-primary" id="btnConfirmMerge">합치기 실행</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/people.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}주식 매매 - Asset Tracker{% endblock %}
+
+{% block content %}
+<div class="header-section">
+    <h1>주식 매매</h1>
+</div>
+
+<div class="summary-cards" id="stockSummary">
+    <!-- JS 렌더링 -->
+</div>
+
+<div class="card mt-4">
+    <h2>포트폴리오 현황</h2>
+    <table class="data-table" id="stockTable">
+        <thead>
+            <tr>
+                <th>종목명</th>
+                <th>코드</th>
+                <th>보유수량</th>
+                <th>총 매수</th>
+                <th>총 매도</th>
+                <th>실현 손익</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- JS 동적 렌더링 -->
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/stocks.js') }}"></script>
+{% endblock %}

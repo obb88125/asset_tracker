@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}인물 상세 - Asset Tracker{% endblock %}
+
+{% block content %}
+<div class="header-section">
+    <a href="/people" class="btn btn-ghost"><i data-lucide="arrow-left"></i> 목록으로</a>
+    <div class="mt-4 flex-between">
+        <h1 id="personName">로딩중...</h1>
+        <button class="btn btn-primary" id="btnEditPerson">정보 수정</button>
+    </div>
+    <p id="personMemo" class="text-muted"></p>
+    <div class="aliases mt-2" id="aliasesContainer"></div>
+</div>
+
+<div class="summary-cards mt-4">
+    <div class="stat-card">
+        <i data-lucide="arrow-down-circle" class="icon-deposit"></i>
+        <div class="stat-info">
+            <span class="label">총 받은 돈</span>
+            <span class="value" id="totalDeposit">₩0</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <i data-lucide="arrow-up-circle" class="icon-withdrawal"></i>
+        <div class="stat-info">
+            <span class="label">총 준 돈</span>
+            <span class="value" id="totalWithdrawal">₩0</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <i data-lucide="wallet" class="icon-net"></i>
+        <div class="stat-info">
+            <span class="label">순 금액</span>
+            <span class="value" id="netAmount">₩0</span>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <h2>거래 타임라인</h2>
+    <div id="timelineChart" class="chart-container" style="height: 400px;"></div>
+</div>
+
+<div class="card mt-4">
+    <h2>거래 내역</h2>
+    <table class="data-table" id="txTable">
+        <thead>
+            <tr>
+                <th>날짜</th>
+                <th>유형</th>
+                <th>금액</th>
+                <th>적요</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/people-detail.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Asset Tracker{% endblock %}</title>
+
+  <!-- 폰트: Pretendard -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+
+  <!-- 아이콘: Lucide -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+  <!-- 차트: Apache ECharts -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+
+  <!-- 메인 스타일 -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <!-- 모바일 메뉴 버튼 -->
+  <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="메뉴 열기">
+    <i data-lucide="menu"></i>
+  </button>
+
+  <!-- 사이드바 오버레이 (모바일) -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="app-layout" id="appLayout">
+    <!-- ── 사이드바 ── -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar__brand">
+        <div class="sidebar__logo">
+          <i data-lucide="wallet"></i>
+        </div>
+        <div class="sidebar__brand-text">
+          <span class="sidebar__brand-name">Asset Tracker</span>
+          <span class="sidebar__brand-sub">자산 추적기</span>
+        </div>
+      </div>
+
+      <nav class="sidebar__nav">
+        <a href="/"
+           class="sidebar__nav-item {{ 'active' if request.path == '/' else '' }}"
+           data-page="dashboard">
+          <i data-lucide="layout-dashboard"></i>
+          <span class="sidebar__nav-label">대시보드</span>
+        </a>
+        <a href="/people"
+           class="sidebar__nav-item {{ 'active' if '/people' in request.path else '' }}"
+           data-page="people">
+          <i data-lucide="users"></i>
+          <span class="sidebar__nav-label">인물 관리</span>
+        </a>
+        <a href="/stocks"
+           class="sidebar__nav-item {{ 'active' if '/stocks' in request.path else '' }}"
+           data-page="stocks">
+          <i data-lucide="trending-up"></i>
+          <span class="sidebar__nav-label">주식 매매</span>
+        </a>
+        <a href="/upload"
+           class="sidebar__nav-item {{ 'active' if '/upload' in request.path else '' }}"
+           data-page="upload">
+          <i data-lucide="upload"></i>
+          <span class="sidebar__nav-label">데이터 업로드</span>
+        </a>
+        <a href="/accounts"
+           class="sidebar__nav-item {{ 'active' if '/accounts' in request.path else '' }}"
+           data-page="accounts">
+          <i data-lucide="building-2"></i>
+          <span class="sidebar__nav-label">계좌 관리</span>
+        </a>
+      </nav>
+
+      <div class="sidebar__footer">
+        <button class="sidebar__toggle" id="sidebarToggle" aria-label="사이드바 접기/펼치기">
+          <i data-lucide="panel-left-close"></i>
+          <span class="sidebar__toggle-label">사이드바 접기</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- ── 메인 콘텐츠 ── -->
+    <main class="main-content page-transition">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  <!-- 토스트 알림 컨테이너 -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- 공통 JS -->
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+  <!-- 페이지별 JS -->
+  {% block scripts %}{% endblock %}
+</body>
+</html>

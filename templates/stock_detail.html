@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}주식 상세 - Asset Tracker{% endblock %}
+
+{% block content %}
+<div class="header-section">
+    <a href="/stocks" class="btn btn-ghost"><i data-lucide="arrow-left"></i> 목록으로</a>
+    <div class="mt-4">
+        <h1 id="stockName">로딩중...</h1>
+        <span class="badge" id="stockCode"></span>
+    </div>
+</div>
+
+<div class="summary-cards mt-4">
+    <div class="stat-card">
+        <div class="stat-info">
+            <span class="label">보유 수량</span>
+            <span class="value" id="holdings">0</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-info">
+            <span class="label">평균 단가</span>
+            <span class="value" id="avgPrice">₩0</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-info">
+            <span class="label">총 매수</span>
+            <span class="value" id="totalBuy">₩0</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-info">
+            <span class="label">총 매도</span>
+            <span class="value" id="totalSell">₩0</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-info">
+            <span class="label">실현 손익</span>
+            <span class="value" id="realizedPnl">₩0</span>
+        </div>
+    </div>
+</div>
+
+<div class="chart-grid mt-4">
+    <div class="chart-card span-2">
+        <h3>매매 타임라인</h3>
+        <div id="timelineChart" class="chart-container" style="height: 300px;"></div>
+    </div>
+    <div class="chart-card span-1">
+        <h3>보유량 변화</h3>
+        <div id="holdingsChart" class="chart-container" style="height: 300px;"></div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <h2>매매 내역</h2>
+    <table class="data-table" id="tradeTable">
+        <thead>
+            <tr>
+                <th>날짜</th>
+                <th>유형</th>
+                <th>수량</th>
+                <th>단가</th>
+                <th>총액</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/stocks-detail.js') }}"></script>
+{% endblock %}
