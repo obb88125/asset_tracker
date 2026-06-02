@@ -3,36 +3,46 @@
 {% block title %}계좌 관리 - Asset Tracker{% endblock %}
 
 {% block content %}
-<div class="header-section flex-between">
-    <h1>계좌 관리</h1>
-    <button class="btn btn-primary" id="btnAddAccount">새 계좌 추가</button>
-</div>
+<section class="page-header">
+  <div>
+    <h1 class="page-header__title">계좌 관리</h1>
+    <p class="page-header__subtitle">은행 계좌와 증권 계좌를 등록해 업로드 데이터의 소속을 정합니다.</p>
+  </div>
+  <div class="page-header__actions">
+    <button class="btn btn-primary" id="btnAddAccount">
+      <i data-lucide="plus"></i>
+      새 계좌
+    </button>
+  </div>
+</section>
 
-<div class="account-grid" id="accountGrid">
-    <!-- JS 동적 렌더링 -->
-</div>
+<section class="account-grid" id="accountGrid"></section>
 
-<!-- 계좌 폼 모달 -->
-<div id="accountModal" class="modal hidden">
-    <div class="modal-content">
-        <h2 id="modalTitle">계좌 추가</h2>
-        <div class="form-group">
-            <label>별칭 (예: KB주거래)</label>
-            <input type="text" id="accName" class="form-control">
-        </div>
-        <div class="form-group">
-            <label>기관명</label>
-            <input type="text" id="accInstitution" class="form-control">
-        </div>
-        <div class="form-group">
-            <label>계좌번호 (선택)</label>
-            <input type="text" id="accNumber" class="form-control">
-        </div>
-        <div class="modal-actions mt-4">
-            <button class="btn btn-ghost" id="btnCancel">취소</button>
-            <button class="btn btn-primary" id="btnSave">저장</button>
-        </div>
+<div id="accountModal" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal__header">
+      <h2 class="modal__title" id="modalTitle">계좌 추가</h2>
+      <button class="modal__close" id="btnCancel" aria-label="닫기"><i data-lucide="x"></i></button>
     </div>
+    <div class="modal__body">
+      <div class="form-group">
+        <label class="form-label" for="accName">별칭</label>
+        <input type="text" id="accName" class="form-input" placeholder="예: KB 주거래, 미래에셋 ISA">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="accInstitution">기관명</label>
+        <input type="text" id="accInstitution" class="form-input" placeholder="예: 국민은행, 미래에셋증권">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="accNumber">계좌번호</label>
+        <input type="text" id="accNumber" class="form-input" placeholder="선택 입력">
+      </div>
+    </div>
+    <div class="modal__footer">
+      <button class="btn btn-ghost" id="btnCloseAccount">취소</button>
+      <button class="btn btn-primary" id="btnSave">저장</button>
+    </div>
+  </div>
 </div>
 {% endblock %}
 

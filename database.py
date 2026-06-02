@@ -3,7 +3,7 @@
 """
 import os
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event, inspect, text
 from sqlalchemy.orm import declarative_base, scoped_session, sessionmaker
 
 import config
@@ -17,6 +17,14 @@ engine = create_engine(
     echo=False,
     connect_args={"check_same_thread": False},  # SQLite 멀티스레드 허용
 )
+
+
+@event.listens_for(engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    """SQLite foreign key constraints are disabled unless each connection opts in."""
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
 
 session_factory = sessionmaker(bind=engine)
 db_session = scoped_session(session_factory)
@@ -36,7 +44,36 @@ def init_db():
     import models  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
+    _apply_lightweight_sqlite_upgrades()
     print(f"[DB] 데이터베이스 초기화 완료: {config.DATABASE_PATH}")
+
+
+def _apply_lightweight_sqlite_upgrades():
+    """Add backward-compatible columns for local SQLite databases created pre-migration."""
+    inspector = inspect(engine)
+    if "transaction" in inspector.get_table_names():
+        columns = {col["name"] for col in inspector.get_columns("transaction")}
+        with engine.begin() as conn:
+            if "balance" not in columns:
+                conn.execute(text("ALTER TABLE 'transaction' ADD COLUMN balance INTEGER"))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_transaction_date ON 'transaction' (transaction_date)"))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_transaction_account_date ON 'transaction' (account_id, transaction_date)"))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_transaction_person ON 'transaction' (person_id)"))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_transaction_alias ON 'transaction' (person_alias_id)"))
+
+    if "stock" in inspector.get_table_names():
+        with engine.begin() as conn:
+            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_stock_name ON stock (name)"))
+            try:
+                conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uq_stock_code_not_null ON stock (code) WHERE code IS NOT NULL"))
+            except Exception:
+                pass
+
+    if "stock_trade" in inspector.get_table_names():
+        with engine.begin() as conn:
+            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_stock_trade_date ON stock_trade (trade_date)"))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_stock_trade_stock_date ON stock_trade (stock_id, trade_date)"))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_stock_trade_account_date ON stock_trade (account_id, trade_date)"))
 
 
 def shutdown_session(exception=None):

@@ -63,11 +63,13 @@ def detect_columns(df: pd.DataFrame) -> dict:
     result = {}
     # 추천 매핑을 위한 키워드
     date_keywords = ["날짜", "일자", "date", "일시", "거래일"]
-    amount_keywords = ["금액", "amount", "입금", "출금", "거래금액", "잔액"]
+    amount_keywords = ["금액", "amount", "입금", "출금", "거래금액"]
+    balance_keywords = ["잔액", "balance", "거래후잔액", "거래 후 잔액"]
     type_keywords = ["구분", "type", "입출금", "거래종류", "종류"]
     name_keywords = ["예금자", "이름", "성명", "name", "상대방", "거래처", "보낸분", "받는분"]
     desc_keywords = ["적요", "메모", "비고", "내용", "description", "memo"]
     stock_keywords = ["종목", "stock", "주식"]
+    stock_code_keywords = ["종목코드", "stock code", "code", "티커", "ticker"]
     qty_keywords = ["수량", "quantity", "주수"]
     price_keywords = ["단가", "price", "가격"]
     fee_keywords = ["수수료", "fee"]
@@ -92,6 +94,10 @@ def detect_columns(df: pd.DataFrame) -> dict:
             suggestion = "type_col"
         elif any(kw in col_lower for kw in desc_keywords):
             suggestion = "description_col"
+        elif any(kw in col_lower for kw in balance_keywords):
+            suggestion = "balance_col"
+        elif any(kw in col_lower for kw in stock_code_keywords):
+            suggestion = "stock_code_col"
         elif any(kw in col_lower for kw in stock_keywords):
             suggestion = "stock_name_col"
         elif any(kw in col_lower for kw in qty_keywords):
@@ -224,6 +230,25 @@ def _parse_amount(value) -> int | None:
         return None
 
 
+def _normalize_stock_code(value) -> str | None:
+    """종목코드를 문자열로 보존하고 국내 6자리 코드는 0-padding한다."""
+    if pd.isna(value):
+        return None
+
+    code = str(value).strip()
+    if not code:
+        return None
+
+    if re.match(r"^\d+\.0$", code):
+        code = code[:-2]
+
+    code = code.replace(" ", "").replace("-", "")
+    if code.isdigit() and len(code) <= 6:
+        code = code.zfill(6)
+
+    return code
+
+
 def import_transactions(
     df: pd.DataFrame,
     column_mapping: dict,
@@ -258,6 +283,7 @@ def import_transactions(
     type_col = column_mapping.get("type_col")
     counterparty_col = column_mapping.get("counterparty_col")
     description_col = column_mapping.get("description_col")
+    balance_col = column_mapping.get("balance_col")
     deposit_col = column_mapping.get("deposit_col")
     withdrawal_col = column_mapping.get("withdrawal_col")
 
@@ -333,6 +359,10 @@ def import_transactions(
             if description_col and pd.notna(row.get(description_col)):
                 description = str(row.get(description_col)).strip()
 
+            balance = None
+            if balance_col and pd.notna(row.get(balance_col)):
+                balance = _parse_amount(row.get(balance_col))
+
             # 인물 매칭
             person_id = None
             alias_id = None
@@ -353,6 +383,7 @@ def import_transactions(
                 transaction_date=tx_date,
                 type=tx_type,
                 amount=amount,
+                balance=balance,
                 counterparty_raw=counterparty_raw,
                 description=description,
                 raw_data=raw_data,
@@ -426,7 +457,7 @@ def import_stock_trades(
             "errors": [f"필수 컬럼이 지정되지 않았습니다: {', '.join(missing)}"],
         }
 
-    # 종목 캐시 (이름 -> Stock 객체)
+    # 종목 캐시 (code/name -> Stock 객체)
     stock_cache = {}
 
     for idx, row in df.iterrows():
@@ -448,31 +479,42 @@ def import_stock_trades(
 
             stock_code = None
             if stock_code_col and pd.notna(row.get(stock_code_col)):
-                stock_code = str(row.get(stock_code_col)).strip()
+                stock_code = _normalize_stock_code(row.get(stock_code_col))
 
-            # 종목 찾거나 생성
-            if stock_name not in stock_cache:
-                stock = (
-                    db_session.query(Stock).filter(Stock.name == stock_name).first()
-                )
+            cache_key = stock_code or stock_name
+
+            # 종목 찾거나 생성: 코드가 있으면 코드 우선, 없으면 이름 기준
+            if cache_key not in stock_cache:
+                stock = None
+                if stock_code:
+                    stock = db_session.query(Stock).filter(Stock.code == stock_code).first()
+                if not stock:
+                    stock = db_session.query(Stock).filter(Stock.name == stock_name).first()
                 if not stock:
                     stock = Stock(name=stock_name, code=stock_code)
                     db_session.add(stock)
                     db_session.flush()
-                stock_cache[stock_name] = stock
-            stock = stock_cache[stock_name]
+                elif stock_code and not stock.code:
+                    stock.code = stock_code
+                stock_cache[cache_key] = stock
+            stock = stock_cache[cache_key]
 
             # 매매 구분
             if type_col and pd.notna(row.get(type_col)):
                 raw_type = str(row.get(type_col)).strip()
-                if raw_type in ("매수", "buy", "BUY", "Buy", "매입"):
+                normalized_type = raw_type.upper()
+                if raw_type in ("매수", "매입") or normalized_type in ("BUY", "B"):
                     trade_type = "buy"
-                elif raw_type in ("매도", "sell", "SELL", "Sell"):
+                elif raw_type in ("매도", "매각") or normalized_type in ("SELL", "S"):
                     trade_type = "sell"
                 else:
-                    trade_type = "buy"  # 기본값
+                    skipped += 1
+                    errors.append(f"행 {row_num}: 매매 구분을 인식할 수 없음 ({raw_type})")
+                    continue
             else:
-                trade_type = "buy"
+                skipped += 1
+                errors.append(f"행 {row_num}: 매매 구분 컬럼이 필요합니다.")
+                continue
 
             # 수량
             quantity = _parse_amount(row.get(quantity_col)) if quantity_col else None
@@ -480,9 +522,11 @@ def import_stock_trades(
                 skipped += 1
                 errors.append(f"행 {row_num}: 수량이 유효하지 않음")
                 continue
+            quantity = abs(quantity)
 
             # 단가
             price_per_unit = _parse_amount(row.get(price_col)) if price_col else 0
+            price_per_unit = abs(price_per_unit or 0)
 
             # 총 금액
             if amount_col and pd.notna(row.get(amount_col)):
@@ -492,12 +536,15 @@ def import_stock_trades(
 
             if total_amount is None:
                 total_amount = 0
+            total_amount = abs(total_amount)
 
             # 수수료, 세금
             fee = _parse_amount(row.get(fee_col)) if fee_col else 0
             tax = _parse_amount(row.get(tax_col)) if tax_col else 0
             fee = fee or 0
             tax = tax or 0
+            fee = abs(fee)
+            tax = abs(tax)
 
             # 원본 데이터
             raw_data = json.dumps(

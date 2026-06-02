@@ -1,11 +1,27 @@
 from flask import jsonify
 from routes import dashboard_bp
-from services.statistics import get_summary_stats, get_monthly_flow, get_people_share, get_cumulative_flow, get_heatmap_data, get_account_comparison
+from services.statistics import (
+    get_account_comparison,
+    get_asset_timeline,
+    get_cumulative_flow,
+    get_heatmap_data,
+    get_monthly_flow,
+    get_people_share,
+    get_summary_stats,
+)
 
 @dashboard_bp.route('/summary', methods=['GET'])
 def summary():
     try:
         data = get_summary_stats()
+        return jsonify({"success": True, "data": data})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+
+@dashboard_bp.route('/asset-timeline', methods=['GET'])
+def asset_timeline():
+    try:
+        data = get_asset_timeline()
         return jsonify({"success": True, "data": data})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})

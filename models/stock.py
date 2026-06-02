@@ -1,7 +1,7 @@
 """
 주식 종목 및 매매 모델
 """
-from sqlalchemy import Column, DateTime, Integer, String, Text, ForeignKey
+from sqlalchemy import Column, DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from database import Base
@@ -15,6 +15,11 @@ class Stock(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(100), nullable=False, comment="종목명")
     code = Column(String(20), nullable=True, comment="종목코드")
+
+    __table_args__ = (
+        UniqueConstraint("code", name="uq_stock_code"),
+        Index("idx_stock_name", "name"),
+    )
 
     # 관계
     trades = relationship(
@@ -45,7 +50,7 @@ class StockTrade(Base):
     upload_session_id = Column(
         Integer,
         ForeignKey("upload_session.id", ondelete="SET NULL"),
-        nullable=False,
+        nullable=True,
     )
     trade_date = Column(DateTime, nullable=False, comment="매매일시")
     type = Column(String(10), nullable=False, comment="매수(buy) 또는 매도(sell)")
@@ -55,6 +60,12 @@ class StockTrade(Base):
     fee = Column(Integer, default=0, comment="수수료")
     tax = Column(Integer, default=0, comment="세금")
     raw_data = Column(Text, nullable=True, comment="원본 행 JSON")
+
+    __table_args__ = (
+        Index("idx_stock_trade_date", "trade_date"),
+        Index("idx_stock_trade_stock_date", "stock_id", "trade_date"),
+        Index("idx_stock_trade_account_date", "account_id", "trade_date"),
+    )
 
     # 관계
     account = relationship("Account", back_populates="stock_trades")

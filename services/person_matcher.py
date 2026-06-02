@@ -76,10 +76,12 @@ def merge_persons(source_ids: list[int], target_id: int) -> dict:
         if not source:
             continue
 
-        # 별칭 이전
-        for alias in source.aliases:
-            alias.person_id = target_id
-            aliases_moved += 1
+        # 별칭 이전. delete-orphan 관계 때문에 collection을 직접 건드리지 않고 bulk update한다.
+        aliases_moved += (
+            db_session.query(PersonAlias)
+            .filter(PersonAlias.person_id == source_id)
+            .update({"person_id": target_id}, synchronize_session=False)
+        )
 
         # 거래 이전
         txs = (

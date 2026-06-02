@@ -202,7 +202,7 @@ function initLucideIcons() {
 
 
 /* ============================================================
-   ECharts 다크 테마 등록
+   ECharts 앱 테마 등록
    ============================================================ */
 
 function registerEChartsTheme() {
@@ -212,39 +212,39 @@ function registerEChartsTheme() {
     backgroundColor: 'transparent',
     textStyle: {
       fontFamily: 'Pretendard, sans-serif',
-      color: '#8b8fa3'
+      color: '#475569'
     },
     title: {
-      textStyle: { color: '#e8eaed', fontWeight: 600 },
-      subtextStyle: { color: '#8b8fa3' }
+      textStyle: { color: '#0f172a', fontWeight: 600 },
+      subtextStyle: { color: '#64748b' }
     },
     legend: {
-      textStyle: { color: '#8b8fa3' },
-      pageTextStyle: { color: '#8b8fa3' },
-      inactiveColor: '#3a3e52'
+      textStyle: { color: '#475569' },
+      pageTextStyle: { color: '#475569' },
+      inactiveColor: '#cbd5e1'
     },
     tooltip: {
-      backgroundColor: 'rgba(26, 29, 46, 0.95)',
-      borderColor: 'rgba(255, 255, 255, 0.08)',
+      backgroundColor: 'rgba(255, 255, 255, 0.98)',
+      borderColor: '#e2e8f0',
       borderWidth: 1,
       textStyle: {
-        color: '#e8eaed',
+        color: '#0f172a',
         fontSize: 13,
         fontFamily: 'Pretendard, sans-serif'
       },
-      extraCssText: 'backdrop-filter: blur(12px); border-radius: 10px; box-shadow: 0 8px 32px rgba(0,0,0,0.4);'
+      extraCssText: 'border-radius: 10px; box-shadow: 0 12px 30px rgba(15,23,42,0.12);'
     },
     xAxis: {
-      axisLine: { lineStyle: { color: 'rgba(255,255,255,0.06)' } },
-      axisTick: { lineStyle: { color: 'rgba(255,255,255,0.06)' } },
-      axisLabel: { color: '#5a5e72', fontSize: 11 },
-      splitLine: { lineStyle: { color: 'rgba(255,255,255,0.04)' } }
+      axisLine: { lineStyle: { color: '#e2e8f0' } },
+      axisTick: { lineStyle: { color: '#e2e8f0' } },
+      axisLabel: { color: '#64748b', fontSize: 11 },
+      splitLine: { lineStyle: { color: '#eef2f7' } }
     },
     yAxis: {
-      axisLine: { lineStyle: { color: 'rgba(255,255,255,0.06)' } },
+      axisLine: { lineStyle: { color: '#e2e8f0' } },
       axisTick: { show: false },
-      axisLabel: { color: '#5a5e72', fontSize: 11 },
-      splitLine: { lineStyle: { color: 'rgba(255,255,255,0.04)', type: 'dashed' } }
+      axisLabel: { color: '#64748b', fontSize: 11 },
+      splitLine: { lineStyle: { color: '#e2e8f0', type: 'dashed' } }
     },
     grid: {
       left: '3%',
@@ -254,20 +254,20 @@ function registerEChartsTheme() {
       containLabel: true
     },
     categoryAxis: {
-      axisLine: { lineStyle: { color: 'rgba(255,255,255,0.06)' } },
-      axisTick: { lineStyle: { color: 'rgba(255,255,255,0.06)' } },
-      axisLabel: { color: '#5a5e72' },
+      axisLine: { lineStyle: { color: '#e2e8f0' } },
+      axisTick: { lineStyle: { color: '#e2e8f0' } },
+      axisLabel: { color: '#64748b' },
       splitLine: { show: false }
     },
     valueAxis: {
       axisLine: { show: false },
       axisTick: { show: false },
-      axisLabel: { color: '#5a5e72' },
-      splitLine: { lineStyle: { color: 'rgba(255,255,255,0.04)', type: 'dashed' } }
+      axisLabel: { color: '#64748b' },
+      splitLine: { lineStyle: { color: '#e2e8f0', type: 'dashed' } }
     },
     color: [
-      '#7c5cfc', '#00c8ff', '#00d68f', '#ff6b6b', '#ffaa00',
-      '#a78bfa', '#f472b6', '#34d399', '#fbbf24', '#60a5fa'
+      '#2563eb', '#0891b2', '#16a34a', '#dc2626', '#d97706',
+      '#7c3aed', '#db2777', '#059669', '#ca8a04', '#0284c7'
     ]
   });
 }
@@ -363,7 +363,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Lucide 아이콘 초기화
   initLucideIcons();
 
-  // ECharts 다크 테마 등록
+  // ECharts 앱 테마 등록
   registerEChartsTheme();
 
   // 사이드바 상태 복원

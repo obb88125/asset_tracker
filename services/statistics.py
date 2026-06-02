@@ -2,7 +2,9 @@
 통계 데이터 생성 서비스
 - 대시보드에 필요한 각종 집계/요약 데이터
 """
-from sqlalchemy import func, case, extract
+from collections import defaultdict
+
+from sqlalchemy import case, func
 
 from database import db_session
 from models.account import Account
@@ -69,9 +71,11 @@ def get_summary_stats() -> dict:
         "net_amount": int(deposit_sum) - int(withdrawal_sum),
         "person_count": person_count,
         "transaction_count": transaction_count,
+        "tx_count": transaction_count,
         "stock_buy_total": int(stock_buy_total),
         "stock_sell_total": int(stock_sell_total),
         "stock_realized_pnl": stock_realized_pnl,
+        "stock_pnl": stock_realized_pnl,
     }
 
 
@@ -262,3 +266,132 @@ def get_account_comparison() -> list[dict]:
         }
         for row in results
     ]
+
+
+def get_asset_timeline() -> dict:
+    """
+    은행 입출금과 주식 매수/매도를 같은 시간축으로 결합한 추정 자산 흐름.
+
+    현재 시세 데이터가 없으므로 보유 주식은 매입 원가 기준 장부가로 계산한다.
+    """
+    daily_cash_flow = defaultdict(int)
+    daily_stock_cash_flow = defaultdict(int)
+    daily_stock_book_value = {}
+    daily_realized_pnl = defaultdict(int)
+    events = []
+
+    tx_rows = (
+        db_session.query(
+            func.strftime("%Y-%m-%d", Transaction.transaction_date).label("date"),
+            func.sum(
+                case(
+                    (Transaction.type == "deposit", Transaction.amount),
+                    (Transaction.type == "withdrawal", -Transaction.amount),
+                    else_=0,
+                )
+            ).label("net"),
+        )
+        .group_by("date")
+        .all()
+    )
+    for row in tx_rows:
+        if row.date:
+            daily_cash_flow[row.date] += int(row.net or 0)
+
+    trades = (
+        db_session.query(StockTrade)
+        .order_by(StockTrade.trade_date.asc(), StockTrade.id.asc())
+        .all()
+    )
+
+    positions = defaultdict(lambda: {"quantity": 0, "cost": 0})
+    realized_pnl_total = 0
+
+    for trade in trades:
+        if not trade.trade_date:
+            continue
+
+        date_key = trade.trade_date.strftime("%Y-%m-%d")
+        stock_name = trade.stock.name if trade.stock else "알 수 없는 종목"
+        fee = trade.fee or 0
+        tax = trade.tax or 0
+        position = positions[trade.stock_id]
+
+        if trade.type == "buy":
+            buy_cost = trade.total_amount + fee
+            position["quantity"] += trade.quantity
+            position["cost"] += buy_cost
+            daily_stock_cash_flow[date_key] -= buy_cost
+        elif trade.type == "sell":
+            sell_proceeds = trade.total_amount - fee - tax
+            daily_stock_cash_flow[date_key] += sell_proceeds
+
+            if position["quantity"] > 0:
+                sold_quantity = min(trade.quantity, position["quantity"])
+                avg_cost = position["cost"] / position["quantity"]
+                cost_of_sold = int(avg_cost * sold_quantity)
+                pnl = sell_proceeds - cost_of_sold
+                realized_pnl_total += pnl
+                daily_realized_pnl[date_key] += pnl
+                position["quantity"] -= sold_quantity
+                position["cost"] -= cost_of_sold
+                if position["quantity"] <= 0:
+                    position["quantity"] = 0
+                    position["cost"] = 0
+
+        daily_stock_book_value[date_key] = sum(p["cost"] for p in positions.values())
+        events.append(
+            {
+                "date": date_key,
+                "type": trade.type,
+                "stock_name": stock_name,
+                "quantity": trade.quantity,
+                "amount": trade.total_amount,
+                "fee": fee,
+                "tax": tax,
+            }
+        )
+
+    all_dates = sorted(
+        set(daily_cash_flow.keys())
+        | set(daily_stock_cash_flow.keys())
+        | set(daily_stock_book_value.keys())
+    )
+
+    dates = []
+    cash_values = []
+    stock_book_values = []
+    asset_values = []
+    daily_flows = []
+    realized_values = []
+
+    cash = 0
+    stock_book = 0
+    realized = 0
+
+    for date_key in all_dates:
+        cash += daily_cash_flow[date_key] + daily_stock_cash_flow[date_key]
+        if date_key in daily_stock_book_value:
+            stock_book = daily_stock_book_value[date_key]
+        realized += daily_realized_pnl[date_key]
+
+        dates.append(date_key)
+        cash_values.append(int(cash))
+        stock_book_values.append(int(stock_book))
+        asset_values.append(int(cash + stock_book))
+        daily_flows.append(int(daily_cash_flow[date_key]))
+        realized_values.append(int(realized))
+
+    return {
+        "dates": dates,
+        "asset_values": asset_values,
+        "cash_values": cash_values,
+        "stock_book_values": stock_book_values,
+        "daily_flows": daily_flows,
+        "realized_pnl_values": realized_values,
+        "events": events,
+        "latest_asset_value": asset_values[-1] if asset_values else 0,
+        "latest_cash_value": cash_values[-1] if cash_values else 0,
+        "latest_stock_book_value": stock_book_values[-1] if stock_book_values else 0,
+        "latest_realized_pnl": realized_pnl_total,
+    }

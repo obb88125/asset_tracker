@@ -5,6 +5,7 @@ from models.account import Account
 from models.transaction import Transaction
 from sqlalchemy import func
 
+@accounts_bp.route('', methods=['GET'])
 @accounts_bp.route('/', methods=['GET'])
 def get_accounts():
     try:
@@ -28,6 +29,7 @@ def get_accounts():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
 
+@accounts_bp.route('', methods=['POST'])
 @accounts_bp.route('/', methods=['POST'])
 def add_account():
     try:

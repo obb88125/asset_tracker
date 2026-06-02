@@ -1,17 +1,19 @@
 from flask import jsonify, request, current_app
 import os
+import uuid
 from werkzeug.utils import secure_filename
 from routes import upload_bp
 from database import db_session
+from models.account import Account
 from models.upload import UploadSession
 from services.parser import parse_excel, detect_columns, import_transactions, import_stock_trades
-from datetime import datetime
 
 ALLOWED_EXTENSIONS = {'xls', 'xlsx', 'csv'}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+@upload_bp.route('', methods=['POST'])
 @upload_bp.route('/', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
@@ -21,7 +23,9 @@ def upload_file():
         return jsonify({"success": False, "error": "No selected file"})
     
     if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
+        original_filename = secure_filename(file.filename)
+        ext = original_filename.rsplit('.', 1)[1].lower()
+        filename = f"{uuid.uuid4().hex}_{original_filename}"
         upload_folder = current_app.config.get('UPLOAD_FOLDER', 'uploads')
         if not os.path.exists(upload_folder):
             os.makedirs(upload_folder)
@@ -31,7 +35,7 @@ def upload_file():
         # Create session
         session = UploadSession(
             filename=filename,
-            file_type=filename.rsplit('.', 1)[1].lower()
+            file_type=ext,
         )
         db_session.add(session)
         db_session.commit()
@@ -64,13 +68,23 @@ def preview():
 
 @upload_bp.route('/import', methods=['POST'])
 def import_data():
-    req = request.json
+    req = request.get_json(silent=True) or {}
     session_id = req.get('session_id')
     account_id = req.get('account_id')
     data_type = req.get('data_type')
-    mapping = req.get('column_mapping')
+    mapping = req.get('column_mapping') or {}
     
     try:
+        if data_type not in ('transaction', 'stock_trade'):
+            return jsonify({"success": False, "error": "data_type은 transaction 또는 stock_trade여야 합니다."})
+        if not account_id:
+            return jsonify({"success": False, "error": "계좌를 선택하세요."})
+        account = db_session.query(Account).get(account_id)
+        if not account:
+            return jsonify({"success": False, "error": "선택한 계좌를 찾을 수 없습니다."})
+        if not isinstance(mapping, dict) or not mapping:
+            return jsonify({"success": False, "error": "컬럼 매핑 정보가 필요합니다."})
+
         session = db_session.query(UploadSession).get(session_id)
         if not session:
             return jsonify({"success": False, "error": "Session not found"})
@@ -92,6 +106,7 @@ def import_data():
         
         return jsonify({"success": True, "data": res})
     except Exception as e:
+        db_session.rollback()
         return jsonify({"success": False, "error": str(e)})
 
 @upload_bp.route('/sessions', methods=['GET'])

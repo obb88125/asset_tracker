@@ -26,6 +26,10 @@ def shutdown_session(exception=None):
 def index():
     return render_template('dashboard.html')
 
+@app.route('/favicon.ico')
+def favicon():
+    return ('', 204)
+
 @app.route('/people')
 def people():
     return render_template('people.html')

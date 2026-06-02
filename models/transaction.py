@@ -1,7 +1,7 @@
 """
 거래(입출금) 모델
 """
-from sqlalchemy import Column, DateTime, Integer, String, Text, ForeignKey
+from sqlalchemy import Column, DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import relationship
 
 from database import Base
@@ -27,14 +27,22 @@ class Transaction(Base):
     upload_session_id = Column(
         Integer,
         ForeignKey("upload_session.id", ondelete="SET NULL"),
-        nullable=False,
+        nullable=True,
     )
     transaction_date = Column(DateTime, nullable=False, comment="거래일시")
     type = Column(String(20), nullable=False, comment="입금(deposit) 또는 출금(withdrawal)")
     amount = Column(Integer, nullable=False, comment="금액 (원 단위 정수)")
+    balance = Column(Integer, nullable=True, comment="거래 후 잔액")
     counterparty_raw = Column(String(200), nullable=False, comment="원본 예금자명")
     description = Column(Text, nullable=True, comment="적요")
     raw_data = Column(Text, nullable=True, comment="원본 행 JSON")
+
+    __table_args__ = (
+        Index("idx_transaction_date", "transaction_date"),
+        Index("idx_transaction_account_date", "account_id", "transaction_date"),
+        Index("idx_transaction_person", "person_id"),
+        Index("idx_transaction_alias", "person_alias_id"),
+    )
 
     # 관계
     account = relationship("Account", back_populates="transactions")
@@ -55,6 +63,7 @@ class Transaction(Base):
             ),
             "type": self.type,
             "amount": self.amount,
+            "balance": self.balance,
             "counterparty_raw": self.counterparty_raw,
             "description": self.description,
         }

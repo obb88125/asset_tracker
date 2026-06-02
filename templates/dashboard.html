@@ -1,82 +1,123 @@
 {% extends "base.html" %}
 
-{% block title %}대시보드 - Asset Tracker{% endblock %}
+{% block title %}자산 변화 - Asset Tracker{% endblock %}
 
 {% block content %}
-<div class="header-section">
-    <h1>대시보드</h1>
-    <div class="filters">
-        <!-- 필터 등 -->
-    </div>
-</div>
+<section class="page-header">
+  <div>
+    <h1 class="page-header__title">자산 변화</h1>
+    <p class="page-header__subtitle">입출금과 주식 매수/매도 시점을 한 흐름에서 봅니다.</p>
+  </div>
+  <div class="page-header__actions">
+    <a href="/upload" class="btn btn-primary">
+      <i data-lucide="upload"></i>
+      데이터 업로드
+    </a>
+  </div>
+</section>
 
-<div class="summary-cards">
-    <div class="stat-card">
-        <i data-lucide="arrow-down-circle" class="icon-deposit"></i>
-        <div class="stat-info">
-            <span class="label">총 입금액</span>
-            <span class="value" id="totalDeposit">₩0</span>
-        </div>
+<section class="asset-stage">
+  <div class="asset-stage__main">
+    <div class="asset-stage__header">
+      <div>
+        <span class="eyebrow">Book value timeline</span>
+        <h2>시간에 따른 추정 자산</h2>
+      </div>
+      <div class="asset-stage__value" id="totalAsset">₩0</div>
     </div>
-    <div class="stat-card">
-        <i data-lucide="arrow-up-circle" class="icon-withdrawal"></i>
-        <div class="stat-info">
-            <span class="label">총 출금액</span>
-            <span class="value" id="totalWithdrawal">₩0</span>
-        </div>
+    <div id="assetTimelineChart" class="chart-container chart-container--asset"></div>
+  </div>
+  <aside class="asset-stage__side">
+    <div class="metric-row">
+      <span>현금 흐름 반영액</span>
+      <strong id="cashValue">₩0</strong>
     </div>
-    <div class="stat-card">
-        <i data-lucide="wallet" class="icon-net"></i>
-        <div class="stat-info">
-            <span class="label">순 금액</span>
-            <span class="value" id="netAmount">₩0</span>
-        </div>
+    <div class="metric-row">
+      <span>주식 장부가</span>
+      <strong id="stockBookValue">₩0</strong>
     </div>
-    <div class="stat-card">
-        <i data-lucide="users" class="icon-primary"></i>
-        <div class="stat-info">
-            <span class="label">등록된 인물</span>
-            <span class="value" id="personCount">0명</span>
-        </div>
+    <div class="metric-row">
+      <span>누적 실현 손익</span>
+      <strong id="realizedPnlValue">₩0</strong>
     </div>
-    <div class="stat-card">
-        <i data-lucide="list-ordered" class="icon-secondary"></i>
-        <div class="stat-info">
-            <span class="label">총 거래 건수</span>
-            <span class="value" id="txCount">0건</span>
-        </div>
+    <div class="event-panel">
+      <div class="event-panel__title">최근 주식 이벤트</div>
+      <div id="stockEventList" class="event-list"></div>
     </div>
-    <div class="stat-card">
-        <i data-lucide="trending-up" class="icon-accent"></i>
-        <div class="stat-info">
-            <span class="label">실현 손익(주식)</span>
-            <span class="value" id="stockPnl">₩0</span>
-        </div>
-    </div>
-</div>
+  </aside>
+</section>
 
-<div class="chart-grid">
-    <div class="chart-card span-2">
-        <h3>월별 입출금 추이</h3>
-        <div id="chartMonthly" class="chart-container"></div>
+<section class="stat-cards">
+  <article class="stat-card">
+    <div class="stat-card__header">
+      <div class="stat-card__icon stat-card__icon--positive"><i data-lucide="arrow-down-circle"></i></div>
     </div>
-    <div class="chart-card">
-        <h3>인물별 거래 비중</h3>
-        <div id="chartPeopleShare" class="chart-container"></div>
+    <div class="stat-card__value" id="totalDeposit">₩0</div>
+    <div class="stat-card__label">총 입금액</div>
+  </article>
+  <article class="stat-card">
+    <div class="stat-card__header">
+      <div class="stat-card__icon stat-card__icon--negative"><i data-lucide="arrow-up-circle"></i></div>
     </div>
-    <div class="chart-card span-2">
-        <h3>누적 순자산 흐름</h3>
-        <div id="chartCumulative" class="chart-container"></div>
+    <div class="stat-card__value" id="totalWithdrawal">₩0</div>
+    <div class="stat-card__label">총 출금액</div>
+  </article>
+  <article class="stat-card">
+    <div class="stat-card__header">
+      <div class="stat-card__icon stat-card__icon--accent"><i data-lucide="wallet"></i></div>
     </div>
-    <div class="chart-card span-1">
-        <h3>계좌별 비교</h3>
-        <div id="chartAccount" class="chart-container"></div>
+    <div class="stat-card__value" id="netAmount">₩0</div>
+    <div class="stat-card__label">입출금 순액</div>
+  </article>
+  <article class="stat-card">
+    <div class="stat-card__header">
+      <div class="stat-card__icon stat-card__icon--info"><i data-lucide="users"></i></div>
     </div>
-    <div class="chart-card span-3">
-        <h3>거래 히트맵</h3>
-        <div id="chartHeatmap" class="chart-container"></div>
+    <div class="stat-card__value" id="personCount">0명</div>
+    <div class="stat-card__label">등록된 인물</div>
+  </article>
+  <article class="stat-card">
+    <div class="stat-card__header">
+      <div class="stat-card__icon stat-card__icon--warning"><i data-lucide="list-ordered"></i></div>
     </div>
-</div>
+    <div class="stat-card__value" id="txCount">0건</div>
+    <div class="stat-card__label">입출금 거래</div>
+  </article>
+  <article class="stat-card">
+    <div class="stat-card__header">
+      <div class="stat-card__icon stat-card__icon--accent"><i data-lucide="trending-up"></i></div>
+    </div>
+    <div class="stat-card__value" id="stockPnl">₩0</div>
+    <div class="stat-card__label">주식 실현 손익</div>
+  </article>
+</section>
+
+<section class="chart-grid">
+  <article class="chart-card chart-card--span-6">
+    <div class="chart-card__header">
+      <h3 class="chart-card__title"><i data-lucide="bar-chart-3"></i>월별 입출금</h3>
+    </div>
+    <div id="chartMonthly" class="chart-container"></div>
+  </article>
+  <article class="chart-card chart-card--span-6">
+    <div class="chart-card__header">
+      <h3 class="chart-card__title"><i data-lucide="users"></i>인물별 거래 비중</h3>
+    </div>
+    <div id="chartPeopleShare" class="chart-container"></div>
+  </article>
+  <article class="chart-card chart-card--span-6">
+    <div class="chart-card__header">
+      <h3 class="chart-card__title"><i data-lucide="building-2"></i>계좌별 비교</h3>
+    </div>
+    <div id="chartAccount" class="chart-container"></div>
+  </article>
+  <article class="chart-card chart-card--span-6">
+    <div class="chart-card__header">
+      <h3 class="chart-card__title"><i data-lucide="calendar-days"></i>거래 히트맵</h3>
+    </div>
+    <div id="chartHeatmap" class="chart-container"></div>
+  </article>
+</section>
 {% endblock %}
 
 {% block scripts %}
